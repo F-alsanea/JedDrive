@@ -27,19 +27,30 @@ const AdminDashboard: React.FC = () => {
   const t = translations[language];
   const [activeTab, setActiveTab] = useState<'stats' | 'providers' | 'marketing' | 'approvals' | 'coupons' | 'debts' | 'orders'>('stats');
 
-  // Manual Add Form State
+  // Manual Add/Edit Form State
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newProv, setNewProv] = useState<Partial<Provider>>({
+  const [editingProviderId, setEditingProviderId] = useState<string | null>(null);
+  const [tempProv, setTempProv] = useState<Partial<Provider>>({
     business_name: '',
     service_type: 'Repair',
     city: 'Jeddah',
-    lat: 21.5,
-    lng: 39.2,
+    google_maps_url: '',
     image_url: 'https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?auto=format&fit=crop&q=80&w=300',
     services_list: [{ id: '1', name: 'خدمة أساسية', price: 150 }]
   });
 
   const [newCoupon, setNewCoupon] = useState({ code: '', val: 0, type: 'percent' as 'percent' | 'fixed' });
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const triggerSaveFeedback = () => {
+    setIsSaving(true);
+    setTimeout(() => {
+      setIsSaving(false);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    }, 800);
+  };
 
   const stats = [
     { label: t.users, val: '1,284', icon: <Users />, color: 'blue' },
@@ -48,32 +59,71 @@ const AdminDashboard: React.FC = () => {
     { label: language === 'ar' ? 'ديون مستحقة' : 'Owed Debts', val: providers.reduce((acc, p) => acc + p.debt_balance, 0).toString() + ' ر.س', icon: <AlertTriangle />, color: 'red' },
   ];
 
-  const handleCreateProvider = () => {
-    if (!newProv.business_name) return;
-    const p: Provider = {
-      ...newProv as Provider,
-      id: 'p-' + Math.random().toString(36).substr(2, 5),
-      user_id: 'u-' + Math.random().toString(36).substr(2, 5),
-      status: 'active',
-      is_online: true,
-      rating: 5.0,
-      debt_balance: 0,
-      credit_limit: 500
-    };
-    addProvider(p);
-    setShowAddForm(false);
-    alert(language === 'ar' ? 'تمت إضافة المركز بنجاح' : 'Provider added successfully');
+  const handleSaveProvider = () => {
+    if (!tempProv.business_name) return;
+
+    if (editingProviderId) {
+      updateProvider(editingProviderId, tempProv);
+      setEditingProviderId(null);
+      setShowAddForm(false);
+      triggerSaveFeedback();
+    } else {
+      const p: Provider = {
+        ...tempProv as Provider,
+        id: 'p-' + Math.random().toString(36).substr(2, 5),
+        user_id: 'u-' + Math.random().toString(36).substr(2, 5),
+        status: 'active',
+        is_online: true,
+        rating: 5.0,
+        debt_balance: 0,
+        credit_limit: 500
+      };
+      addProvider(p);
+      setShowAddForm(false);
+      triggerSaveFeedback();
+    }
   };
 
   const addServiceField = () => {
-    const updatedServices = [...(newProv.services_list || []), { id: Math.random().toString(), name: '', price: 0 }];
-    setNewProv({ ...newProv, services_list: updatedServices });
+    const updatedServices = [...(tempProv.services_list || []), { id: Math.random().toString(), name: '', price: 0 }];
+    setTempProv({ ...tempProv, services_list: updatedServices });
   };
 
   const handleServiceChange = (idx: number, field: keyof ProviderService, val: string | number) => {
-    const updated = [...(newProv.services_list || [])];
+    const updated = [...(tempProv.services_list || [])];
     updated[idx] = { ...updated[idx], [field]: val };
-    setNewProv({ ...newProv, services_list: updated });
+    setTempProv({ ...tempProv, services_list: updated });
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 1024 * 1024) { // 1MB limit for localStorage
+        alert(language === 'ar' ? 'الصورة كبيرة جداً، يرجى اختيار صورة أقل من 1 ميجابايت' : 'Image is too large, please choose a file under 1MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setTempProv({ ...tempProv, image_url: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit for banner
+        alert(language === 'ar' ? 'حجم البانر كبير جداً' : 'Banner image is too large');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        useStore.getState().setBannerUrl(reader.result as string);
+        triggerSaveFeedback();
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const updateExistingServicePrice = (pId: string, sId: string, newPrice: number) => {
@@ -144,14 +194,16 @@ const AdminDashboard: React.FC = () => {
                   <input
                     placeholder="مثلاً: مركز صيانة جدة"
                     className="w-full p-4 rounded-2xl border dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"
-                    onChange={(e) => setNewProv({ ...newProv, business_name: e.target.value })}
+                    value={tempProv.business_name}
+                    onChange={(e) => setTempProv({ ...tempProv, business_name: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold opacity-50">{language === 'ar' ? 'التصنيف' : 'Category'}</label>
                   <select
                     className="w-full p-4 rounded-2xl border dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"
-                    onChange={(e) => setNewProv({ ...newProv, service_type: e.target.value as any })}
+                    value={tempProv.service_type}
+                    onChange={(e) => setTempProv({ ...tempProv, service_type: e.target.value as any })}
                   >
                     <option value="Repair">{t.repair}</option>
                     <option value="Wash">{t.wash}</option>
@@ -160,19 +212,31 @@ const AdminDashboard: React.FC = () => {
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold opacity-50">{t.uploadPhoto} URL</label>
-                  <input
-                    placeholder="رابط صورة المركز"
-                    className="w-full p-4 rounded-2xl border dark:bg-slate-900 outline-none"
-                    onChange={(e) => setNewProv({ ...newProv, image_url: e.target.value })}
-                  />
+                  <label className="text-xs font-bold opacity-50">{t.uploadPhoto}</label>
+                  <div className="relative group cursor-pointer h-16 w-full border-2 border-dashed border-blue-500/30 rounded-2xl flex items-center justify-center hover:border-blue-500 transition-all overflow-hidden bg-blue-50/5">
+                    {tempProv.image_url && (
+                      <img src={tempProv.image_url} className="absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-40 transition-opacity" />
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                      onChange={handleFileUpload}
+                    />
+                    <div className="flex items-center gap-2 text-blue-600 font-black text-xs z-20">
+                      <ImageIcon size={18} />
+                      {tempProv.image_url ? (language === 'ar' ? 'تغيير الصورة' : 'Change Photo') : (language === 'ar' ? 'ارفع صورة المركز' : 'Upload Photo')}
+                    </div>
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold opacity-50">{t.locationCoords}</label>
-                  <div className="flex gap-4">
-                    <input placeholder="Lat (21.5)" className="flex-1 p-4 rounded-2xl border dark:bg-slate-900" onChange={(e) => setNewProv({ ...newProv, lat: parseFloat(e.target.value) })} />
-                    <input placeholder="Lng (39.2)" className="flex-1 p-4 rounded-2xl border dark:bg-slate-900" onChange={(e) => setNewProv({ ...newProv, lng: parseFloat(e.target.value) })} />
-                  </div>
+                  <label className="text-xs font-bold opacity-50">{language === 'ar' ? 'رابط قوقل ماب' : 'Google Maps URL'}</label>
+                  <input
+                    placeholder="https://..."
+                    value={tempProv.google_maps_url}
+                    className="w-full p-4 rounded-2xl border dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"
+                    onChange={(e) => setTempProv({ ...tempProv, google_maps_url: e.target.value })}
+                  />
                 </div>
               </div>
 
@@ -185,17 +249,19 @@ const AdminDashboard: React.FC = () => {
                   </button>
                 </div>
                 <div className="space-y-3">
-                  {newProv.services_list?.map((s, idx) => (
+                  {tempProv.services_list?.map((s, idx) => (
                     <div key={s.id} className="flex gap-4">
                       <input
                         placeholder="اسم الخدمة"
                         className="flex-1 p-3 rounded-xl border dark:bg-slate-900"
+                        value={s.name}
                         onChange={(e) => handleServiceChange(idx, 'name', e.target.value)}
                       />
                       <input
                         type="number"
                         placeholder="السعر"
                         className="w-32 p-3 rounded-xl border dark:bg-slate-900"
+                        value={s.price}
                         onChange={(e) => handleServiceChange(idx, 'price', parseInt(e.target.value))}
                       />
                     </div>
@@ -204,7 +270,7 @@ const AdminDashboard: React.FC = () => {
               </div>
 
               <button
-                onClick={handleCreateProvider}
+                onClick={handleSaveProvider}
                 className="w-full bg-blue-600 text-white py-5 rounded-3xl font-black text-lg shadow-xl hover:bg-blue-700 transition-all"
               >
                 {t.save}
@@ -265,11 +331,27 @@ const AdminDashboard: React.FC = () => {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <button
+                          onClick={() => {
+                            setEditingProviderId(p.id);
+                            setTempProv(p);
+                            setShowAddForm(true);
+                          }}
+                          className="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-black text-xs hover:bg-blue-100 transition-all"
+                        >
+                          {language === 'ar' ? 'تعديل' : 'Edit'}
+                        </button>
+                        <button
                           onClick={() => updateProvider(p.id, { status: p.status === 'active' ? 'blocked' : 'active' })}
                           className={`px-4 py-2 rounded-xl font-black text-xs transition-all ${p.status === 'active' ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-green-600 text-white hover:bg-green-700'
                             }`}
                         >
                           {p.status === 'active' ? t.ar ? 'حظر' : 'Block' : t.ar ? 'تفعيل' : 'Activate'}
+                        </button>
+                        <button
+                          onClick={() => useStore.getState().deleteProvider(p.id)}
+                          className="p-2 text-red-400 hover:text-red-600 transition-colors"
+                        >
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     </td>
@@ -342,14 +424,23 @@ const AdminDashboard: React.FC = () => {
                     ? 'قم بتغيير صورة العرض الرئيسية في الصفحة الرئيسية للتطبيق.'
                     : 'Change the main promo banner on the home page.'}
                 </p>
-                <div className="space-y-2">
-                  <label className="text-xs font-black opacity-40 uppercase tracking-widest">{language === 'ar' ? 'رابط الصورة' : 'Image URL'}</label>
-                  <input
-                    className="w-full p-4 rounded-2xl border dark:bg-slate-900 font-bold outline-none focus:ring-2 ring-blue-500"
-                    placeholder="https://..."
-                    value={useStore.getState().bannerUrl}
-                    onChange={(e) => useStore.getState().setBannerUrl(e.target.value)}
-                  />
+                <div className="space-y-4">
+                  <label className="text-xs font-black opacity-40 uppercase tracking-widest">{language === 'ar' ? 'رفع البانر الجديد' : 'Upload New Banner'}</label>
+                  <div className="relative group cursor-pointer h-24 w-full border-4 border-dashed border-blue-500/30 rounded-3xl flex items-center justify-center hover:border-blue-500 transition-all overflow-hidden bg-blue-50/5">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                      onChange={handleBannerUpload}
+                    />
+                    <div className="flex flex-col items-center gap-2 text-blue-600 font-black z-20">
+                      <ImageIcon size={32} />
+                      <span className="text-sm">{language === 'ar' ? 'اختر ملف الصورة من جهازك' : 'Choose Image File'}</span>
+                    </div>
+                  </div>
+                  <p className="text-[10px] opacity-40 font-bold text-center">
+                    {language === 'ar' ? 'سيتم ضغط وتحديث الصورة فوراً على الموقع' : 'Image will be compressed and updated instantly on the site'}
+                  </p>
                 </div>
               </div>
               <div className="relative h-48 rounded-3xl overflow-hidden shadow-inner border bg-slate-50">
@@ -366,16 +457,47 @@ const AdminDashboard: React.FC = () => {
                   ? 'هذا النص سيظهر كشريط متحرك في أعلى الصفحة الرئيسية.'
                   : 'This text will appear as a scrolling marquee at the top of the home page.'}
               </p>
-              <div className="space-y-2">
+              <div className="space-y-4">
                 <label className="text-xs font-black opacity-40 uppercase tracking-widest">{language === 'ar' ? 'نص الإعلان' : 'Announcement Text'}</label>
                 <textarea
                   className="w-full p-4 rounded-2xl border dark:bg-slate-900 font-bold outline-none focus:ring-2 ring-blue-500 min-h-[100px]"
                   placeholder="..."
-                  value={useStore.getState().scrollingTicker}
-                  onChange={(e) => useStore.getState().setScrollingTicker(e.target.value)}
+                  defaultValue={useStore.getState().scrollingTicker}
+                  id="ticker-text-input"
                 />
+                <button
+                  onClick={() => {
+                    const val = (document.getElementById('ticker-text-input') as HTMLTextAreaElement).value;
+                    useStore.getState().setScrollingTicker(val);
+                    triggerSaveFeedback();
+                  }}
+                  className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-blue-700 transition-all"
+                >
+                  {language === 'ar' ? 'حفظ النص وتطبيقه فورا' : 'Save & Apply Immediately'}
+                </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Persistence Feedback Overlays */}
+      {isSaving && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
+          <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-2xl border border-blue-500/30 flex flex-col items-center gap-4 animate-in zoom-in duration-300">
+            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <p className="font-black text-sm uppercase tracking-widest">{language === 'ar' ? 'جاري الحفظ والتطبيق...' : 'Saving & Applying...'}</p>
+          </div>
+        </div>
+      )}
+
+      {saveSuccess && (
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-top-10 duration-500">
+          <div className="bg-green-600 text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border-2 border-white/20">
+            <CheckCircle2 size={24} />
+            <span className="font-black uppercase tracking-widest text-xs">
+              {language === 'ar' ? 'تم الحفظ والتحديث على الموقع بنجاح' : 'Saved & Updated Globally Successfully'}
+            </span>
           </div>
         </div>
       )}
@@ -487,7 +609,10 @@ const AdminDashboard: React.FC = () => {
                 {!c.is_active && <div className="absolute inset-0 bg-slate-100/50 backdrop-blur-[1px] z-10"></div>}
                 <div className="flex justify-between items-start mb-6 relative z-20">
                   <span className={`text-4xl font-black tracking-tighter uppercase ${c.is_active ? 'text-blue-600' : 'text-slate-400'}`}>{c.code}</span>
-                  <button onClick={() => toggleCoupon(c.id)} className="hover:scale-110 transition-transform">
+                  <button onClick={() => {
+                    toggleCoupon(c.id);
+                    triggerSaveFeedback();
+                  }} className="hover:scale-110 transition-transform">
                     {c.is_active ? <ToggleRight size={44} className="text-blue-600" /> : <ToggleLeft size={44} className="text-slate-300" />}
                   </button>
                 </div>

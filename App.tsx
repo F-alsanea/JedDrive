@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { MemoryRouter, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
-import { Bell, Clock, Package, CheckCircle, MapPin, Star, Shield } from 'lucide-react';
+import { Bell, Clock, Package, CheckCircle, MapPin, Star, Shield, Sun, Moon, Crown, LogOut, ChevronRight } from 'lucide-react';
 import { useStore } from './store';
 import { translations } from './translations';
 import Landing from './pages/LandingPage';
@@ -38,13 +38,17 @@ const RouterContent: React.FC = () => {
     navigate('/');
   };
 
-  if (!user && location.pathname !== '/provider-signup') return <Landing />;
+  // No global redirect, allow access to Home
+  // if (!user && location.pathname !== '/provider-signup') return <Landing />;
 
   return (
-    <div className={`min-h-screen transition-theme ${language === 'ar' ? 'font-arabic' : 'font-sans'}`}>
-      <nav className={`fixed top-0 left-0 right-0 z-50 p-4 flex justify-between items-center shadow-lg border-b transition-theme ${theme === 'dark' ? 'bg-slate-800 border-slate-700' :
-        theme === 'luxury' ? 'bg-black border-orange-900/30' :
-          'bg-white border-slate-200'
+    <div className={`min-h-screen transition-theme ${language === 'ar' ? 'font-arabic' : 'font-sans'} ${theme === 'luxury' ? 'bg-[#050505] text-white' :
+      theme === 'dark' ? 'bg-slate-900 text-slate-100' :
+        'bg-slate-50 text-slate-900'
+      }`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 p-4 flex justify-between items-center shadow-lg border-b transition-theme ${theme === 'dark' ? 'bg-slate-800/90 border-slate-700 backdrop-blur-md' :
+        theme === 'luxury' ? 'bg-black/80 border-orange-900/30 backdrop-blur-md' :
+          'bg-white/90 border-slate-200 backdrop-blur-md'
         }`}>
         <div className="flex items-center gap-4">
           <h1
@@ -56,21 +60,39 @@ const RouterContent: React.FC = () => {
           </h1>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex bg-slate-100 dark:bg-slate-700 luxury:bg-slate-900 p-1 rounded-full gap-1 border luxury:border-orange-900/20">
-            <button onClick={() => setTheme('light')} className={`px-2 py-1 text-[10px] font-bold rounded-full transition-all ${theme === 'light' ? 'bg-white shadow-sm' : 'opacity-50'}`}>{t.light}</button>
-            <button onClick={() => setTheme('dark')} className={`px-2 py-1 text-[10px] font-bold rounded-full transition-all ${theme === 'dark' ? 'bg-slate-600 text-white shadow-sm' : 'opacity-50'}`}>{t.dark}</button>
-            <button onClick={() => setTheme('luxury')} className={`px-2 py-1 text-[10px] font-bold rounded-full transition-all ${theme === 'luxury' ? 'bg-[#ff6b00] text-white shadow-sm' : 'opacity-50'}`}>{t.luxury}</button>
+        <div className="flex items-center gap-4">
+          <div className="flex bg-white/5 backdrop-blur-md p-1 rounded-full gap-1 border border-white/10">
+            <button
+              onClick={() => setTheme('light')}
+              className={`p-2 rounded-full transition-all ${theme === 'light' ? 'bg-[#FF4500] text-white shadow-lg scale-110' : 'opacity-40 hover:opacity-100 hover:bg-white/10'}`}
+              title={t.light}
+            >
+              <Sun size={14} />
+            </button>
+            <button
+              onClick={() => setTheme('dark')}
+              className={`p-2 rounded-full transition-all ${theme === 'dark' ? 'bg-[#FF4500] text-white shadow-lg scale-110' : 'opacity-40 hover:opacity-100 hover:bg-white/10'}`}
+              title={t.dark}
+            >
+              <Moon size={14} />
+            </button>
+            <button
+              onClick={() => setTheme('luxury')}
+              className={`p-2 rounded-full transition-all ${theme === 'luxury' ? 'bg-[#FF4500] text-white shadow-lg scale-110' : 'opacity-40 hover:opacity-100 hover:bg-white/10'}`}
+              title={t.luxury}
+            >
+              <Crown size={14} />
+            </button>
           </div>
 
           <button
             onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
-            className="px-3 py-1 text-[10px] font-black border rounded-md"
+            className="w-10 h-10 flex items-center justify-center text-[10px] font-black border border-white/10 rounded-full bg-white/5 hover:bg-[#FF4500]/20 transition-colors"
           >
             {language === 'ar' ? 'EN' : 'عربي'}
           </button>
 
-          {user && (
+          {user ? (
             <div className="flex items-center gap-3 border-l pl-3 ml-3 border-slate-300 dark:border-slate-600">
               {/* Notifications */}
               <div className="relative group">
@@ -99,12 +121,24 @@ const RouterContent: React.FC = () => {
                 </div>
               </div>
 
-              <span className="text-xs font-black hidden sm:block uppercase">{user.name}</span>
-              <button onClick={handleLogout} className="text-[10px] text-red-500 font-bold hover:underline">{t.logout}</button>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${theme === 'luxury' ? 'bg-[#ff6b00]' : 'bg-blue-600'}`}>
+              <span className="text-[10px] font-black hidden sm:block uppercase tracking-widest opacity-60">{user.name}</span>
+              <button
+                onClick={handleLogout}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-lg shadow-red-500/10 group"
+              >
+                <LogOut size={14} className="group-hover:-translate-x-0.5 transition-transform" />
+              </button>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-black shadow-xl ring-2 ring-white/10 ${theme === 'luxury' ? 'bg-[#ff6b00] shadow-[#ff6b00]/20' : 'bg-blue-600'}`}>
                 {user.name.charAt(0)}
               </div>
             </div>
+          ) : (
+            <button
+              onClick={() => navigate('/login')}
+              className={`px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest transition-all ${theme === 'luxury' ? 'bg-[#FF4500] text-white shadow-lg shadow-[#FF4500]/20' : 'bg-blue-600 text-white shadow-lg'}`}
+            >
+              {t.login}
+            </button>
           )}
         </div>
       </nav>
@@ -112,8 +146,9 @@ const RouterContent: React.FC = () => {
       <main className="pt-20 pb-24 max-w-7xl mx-auto px-4">
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/orders" element={<OrdersPage />} />
-          <Route path="/payment" element={<PaymentPage />} />
+          <Route path="/login" element={<Landing />} />
+          <Route path="/orders" element={user ? <OrdersPage /> : <Navigate to="/login" />} />
+          <Route path="/payment" element={user ? <PaymentPage /> : <Navigate to="/login" />} />
           <Route path="/provider-signup" element={<ProviderSignup />} />
           <Route path="/admin" element={user?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/" />} />
           <Route path="/provider" element={user?.role === 'provider' ? <ProviderDashboard /> : <Navigate to="/" />} />

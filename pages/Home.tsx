@@ -146,8 +146,8 @@ const Home: React.FC = () => {
       )}
 
       {/* Scrolling Ticker (Marquee) */}
-      <div className="mx-4 bg-[#FF4500]/10 backdrop-blur-md text-white overflow-hidden py-3 rounded-3xl border border-white/5">
-        <div className="whitespace-nowrap inline-block animate-marquee font-orbitron font-bold text-[10px] uppercase tracking-[0.3em]">
+      <div className="mx-4 bg-[#FF4500]/5 backdrop-blur-md overflow-hidden py-3 rounded-3xl border border-[#FF4500]/10">
+        <div className="whitespace-nowrap inline-block animate-marquee font-orbitron font-bold text-[10px] text-dim uppercase tracking-[0.3em]">
           <span className="mx-8">{useStore.getState().scrollingTicker}</span>
           <span className="mx-8 text-[#FF4500]">///</span>
           <span className="mx-8">{useStore.getState().scrollingTicker}</span>
@@ -181,7 +181,7 @@ const Home: React.FC = () => {
             <h2 className="text-4xl font-orbitron font-black mb-2 luxury-text-gradient">
               {language === 'ar' ? `مرحباً، ${user?.name}` : `WELCOME, ${user?.name}`}
             </h2>
-            <p className="text-white/60 mb-8 max-w-md font-inter font-medium leading-relaxed">
+            <p className="text-dim mb-8 max-w-md font-inter font-medium leading-relaxed">
               {t.tagline}
             </p>
 
@@ -190,8 +190,10 @@ const Home: React.FC = () => {
                 <MapPin size={22} />
               </div>
               <div className="flex-1">
-                <p className="text-[10px] font-orbitron font-black opacity-40 uppercase tracking-widest">{language === 'ar' ? 'الموقع الحالي' : 'CURRENT LOCATION'}</p>
-                <span className="font-bold font-inter text-sm">{language === 'ar' ? 'حي الروضة، جدة' : 'Al-Rawdah, Jeddah'}</span>
+                <p className="text-[10px] font-orbitron font-black text-dim uppercase tracking-widest">{language === 'ar' ? 'الموقع الحالي' : 'CURRENT LOCATION'}</p>
+                <span className="font-bold font-inter text-sm">
+                  {user?.address || (user?.lat ? `${user.lat.toFixed(3)}, ${user.lng?.toFixed(3)}` : (language === 'ar' ? 'حي الروضة، جدة' : 'Al-Rawdah, Jeddah'))}
+                </span>
               </div>
               <button className="bg-white/10 hover:bg-white/20 text-xs px-4 py-2 rounded-xl font-orbitron font-black transition-all border border-white/5">{language === 'ar' ? 'تغيير' : 'EDIT'}</button>
             </div>
@@ -298,6 +300,10 @@ const Home: React.FC = () => {
               <button
                 disabled={!(selectedServices[p.id]?.length > 0)}
                 onClick={() => {
+                  if (!user) {
+                    navigate('/login');
+                    return;
+                  }
                   const services = p.services_list.filter(s => selectedServices[p.id]?.includes(s.id));
                   localStorage.setItem('selected_provider', JSON.stringify(p));
                   localStorage.setItem('selected_services', JSON.stringify(services));

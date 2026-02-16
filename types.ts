@@ -19,8 +19,9 @@ export interface Provider {
   debt_balance: number;
   credit_limit: number;
   cr_number?: string;
-  lat: number;
-  lng: number;
+  lat?: number;
+  lng?: number;
+  google_maps_url?: string;
   image_url: string;
   services_list: ProviderService[];
 }
@@ -33,6 +34,9 @@ export interface User {
   role: Role;
   is_premium: boolean;
   wallet_balance: number;
+  lat?: number;
+  lng?: number;
+  address?: string;
 }
 
 export interface Service {
