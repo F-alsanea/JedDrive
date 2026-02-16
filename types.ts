@@ -23,6 +23,7 @@ export interface Provider {
   lng?: number;
   google_maps_url?: string;
   image_url: string;
+  is_featured?: boolean;
   services_list: ProviderService[];
 }
 
@@ -60,7 +61,7 @@ export interface Order {
   unique_otp: string;
   created_at: string;
   commission: number;
-  payment_method: 'online' | 'center' | 'wallet';
+  payment_method: 'bank' | 'center' | 'cash' | 'online' | 'wallet';
   order_type: 'Stationary' | 'Mobile';
   review?: Review;
   offline_sync_pending?: boolean;

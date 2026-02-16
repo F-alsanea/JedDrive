@@ -167,3 +167,38 @@
   background: #FF4500;
   border-radius: 10px;
 }
+
+/* Print Optimization */
+@media print {
+
+  nav,
+  footer,
+  .md\:fixed,
+  button:not(.print-only),
+  .no-print,
+  .mobile-bottom-nav {
+    display: none !important;
+  }
+
+  body,
+  .min-h-screen,
+  main {
+    background: white !important;
+    color: black !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .glass-card {
+    background: white !important;
+    border: 1px solid #eee !important;
+    color: black !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+  .max-w-7xl {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}

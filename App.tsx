@@ -11,6 +11,7 @@ import ProviderDashboard from './pages/ProviderDashboard';
 import PaymentPage from './pages/PaymentPage';
 import ProviderSignup from './pages/ProviderSignup';
 import OrdersPage from './pages/OrdersPage';
+import SettingsPage from './pages/SettingsPage';
 
 const RouterContent: React.FC = () => {
   const { user, theme, language, setTheme, setLanguage, setUser } = useStore();
@@ -150,6 +151,7 @@ const RouterContent: React.FC = () => {
           <Route path="/orders" element={user ? <OrdersPage /> : <Navigate to="/login" />} />
           <Route path="/payment" element={user ? <PaymentPage /> : <Navigate to="/login" />} />
           <Route path="/provider-signup" element={<ProviderSignup />} />
+          <Route path="/settings" element={user ? <SettingsPage /> : <Navigate to="/login" />} />
           <Route path="/admin" element={user?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/" />} />
           <Route path="/provider" element={user?.role === 'provider' ? <ProviderDashboard /> : <Navigate to="/" />} />
         </Routes>

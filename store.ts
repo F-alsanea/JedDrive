@@ -33,6 +33,8 @@ interface AppState {
   toggleOfflineMode: (providerId: string) => void;
   syncOfflineOrders: () => void;
   submitReview: (orderId: string, review: Review) => void;
+  updateUser: (updates: Partial<User>) => void;
+  updateExistingServicePrice: (providerId: string, serviceId: string, newPrice: number) => void;
 }
 
 const getLocalStorage = (key: string) => JSON.parse(localStorage.getItem(key) || 'null');
@@ -127,7 +129,24 @@ export const useStore = create<AppState>((set) => ({
   syncOfflineOrders: () => set((state) => ({
     orders: state.orders.map(o => o.offline_sync_pending ? { ...o, offline_sync_pending: false } : o)
   })),
-  submitReview: (orderId, review) => set((state) => ({
+  submitReview: (orderId: string, review: Review) => set((state) => ({
     orders: state.orders.map(o => o.id === orderId ? { ...o, review, status: 'completed' } : o)
   })),
+  updateUser: (updates) => set((state) => {
+    if (!state.user) return state;
+    const updatedUser = { ...state.user, ...updates };
+    setLocalStorage('jeddrive_user', updatedUser);
+    return { user: updatedUser };
+  }),
+  updateExistingServicePrice: (providerId, serviceId, newPrice) => set((state) => {
+    const newProviders = state.providers.map(p => {
+      if (p.id !== providerId) return p;
+      return {
+        ...p,
+        services_list: p.services_list.map(s => s.id === serviceId ? { ...s, price: newPrice } : s)
+      };
+    });
+    setLocalStorage('jeddrive_providers', newProviders);
+    return { providers: newProviders };
+  }),
 }));
