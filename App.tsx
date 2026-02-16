@@ -1,17 +1,19 @@
 
 import React, { useEffect } from 'react';
 import { MemoryRouter, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
-import { Bell, Clock, Package, CheckCircle, MapPin, Star, Shield, Sun, Moon, Crown, LogOut, ChevronRight } from 'lucide-react';
+import { Bell, Clock, Package, CheckCircle, MapPin, Star, Shield, Sun, Moon, Crown, LogOut, ChevronRight, Loader2 } from 'lucide-react';
 import { useStore } from './store';
 import { translations } from './translations';
-import Landing from './pages/LandingPage';
-import Home from './pages/Home';
-import AdminDashboard from './pages/AdminDashboard';
-import ProviderDashboard from './pages/ProviderDashboard';
-import PaymentPage from './pages/PaymentPage';
-import ProviderSignup from './pages/ProviderSignup';
-import OrdersPage from './pages/OrdersPage';
-import SettingsPage from './pages/SettingsPage';
+
+// Lazy load pages for performance
+const Landing = React.lazy(() => import('./pages/LandingPage'));
+const Home = React.lazy(() => import('./pages/Home'));
+const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
+const ProviderDashboard = React.lazy(() => import('./pages/ProviderDashboard'));
+const PaymentPage = React.lazy(() => import('./pages/PaymentPage'));
+const ProviderSignup = React.lazy(() => import('./pages/ProviderSignup'));
+const OrdersPage = React.lazy(() => import('./pages/OrdersPage'));
+const SettingsPage = React.lazy(() => import('./pages/SettingsPage'));
 
 const RouterContent: React.FC = () => {
   const { user, theme, language, setTheme, setLanguage, setUser } = useStore();
@@ -145,16 +147,23 @@ const RouterContent: React.FC = () => {
       </nav>
 
       <main className="pt-20 pb-24 max-w-7xl mx-auto px-4">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Landing />} />
-          <Route path="/orders" element={user ? <OrdersPage /> : <Navigate to="/login" />} />
-          <Route path="/payment" element={user ? <PaymentPage /> : <Navigate to="/login" />} />
-          <Route path="/provider-signup" element={<ProviderSignup />} />
-          <Route path="/settings" element={user ? <SettingsPage /> : <Navigate to="/login" />} />
-          <Route path="/admin" element={user?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/" />} />
-          <Route path="/provider" element={user?.role === 'provider' ? <ProviderDashboard /> : <Navigate to="/" />} />
-        </Routes>
+        <React.Suspense fallback={
+          <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+            <Loader2 className="animate-spin text-[#FF4500]" size={40} />
+            <p className="font-orbitron font-black text-[10px] uppercase tracking-[0.3em] opacity-30">{language === 'ar' ? 'جاري التحميل...' : 'LOADING...'}</p>
+          </div>
+        }>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Landing />} />
+            <Route path="/orders" element={user ? <OrdersPage /> : <Navigate to="/login" />} />
+            <Route path="/payment" element={user ? <PaymentPage /> : <Navigate to="/login" />} />
+            <Route path="/provider-signup" element={<ProviderSignup />} />
+            <Route path="/settings" element={user ? <SettingsPage /> : <Navigate to="/login" />} />
+            <Route path="/admin" element={user?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/" />} />
+            <Route path="/provider" element={user?.role === 'provider' ? <ProviderDashboard /> : <Navigate to="/" />} />
+          </Routes>
+        </React.Suspense>
       </main>
 
       {/* Mobile Bottom Navigation - Glassmorphism Style */}

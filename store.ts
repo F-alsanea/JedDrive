@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import { User, Provider, Order, Coupon, Theme, Language, Review, ProviderService } from './types';
+import { User, Provider, Order, Coupon, Theme, Language, Review, ProviderService, ProviderRequest } from './types';
 import { MOCK_USER, MOCK_PROVIDERS, MOCK_COUPONS } from './constants';
 
 interface AppState {
@@ -35,6 +35,8 @@ interface AppState {
   submitReview: (orderId: string, review: Review) => void;
   updateUser: (updates: Partial<User>) => void;
   updateExistingServicePrice: (providerId: string, serviceId: string, newPrice: number) => void;
+  providerRequests: ProviderRequest[];
+  submitProviderRequest: (request: ProviderRequest) => void;
 }
 
 const getLocalStorage = (key: string) => JSON.parse(localStorage.getItem(key) || 'null');
@@ -51,6 +53,7 @@ export const useStore = create<AppState>((set) => ({
   bannerUrl: localStorage.getItem('jeddrive_banner') || 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=1000',
   scrollingTicker: localStorage.getItem('jeddrive_ticker') || 'أهلاً بكم في JedDrive - أفضل خدمات السيارات في جدة متوفرة الآن بين يديك! متميزون في السطحات والغسيل والتلميع.',
   notifications: getLocalStorage('jeddrive_notifications') || [],
+  providerRequests: getLocalStorage('jeddrive_provider_requests') || [],
 
   setUser: (user) => {
     set({ user });
@@ -148,5 +151,10 @@ export const useStore = create<AppState>((set) => ({
     });
     setLocalStorage('jeddrive_providers', newProviders);
     return { providers: newProviders };
+  }),
+  submitProviderRequest: (request) => set((state) => {
+    const newRequests = [request, ...state.providerRequests];
+    setLocalStorage('jeddrive_provider_requests', newRequests);
+    return { providerRequests: newRequests };
   }),
 }));

@@ -24,6 +24,8 @@ export interface Provider {
   google_maps_url?: string;
   image_url: string;
   is_featured?: boolean;
+  driver_name?: string;
+  driver_phone?: string;
   services_list: ProviderService[];
 }
 
@@ -86,3 +88,14 @@ export interface Coupon {
 
 export type Theme = 'light' | 'dark' | 'luxury';
 export type Language = 'ar' | 'en';
+
+export interface ProviderRequest {
+  id: string;
+  business_name: string;
+  cr_number: string;
+  service_type: string;
+  contact_number: string;
+  photo?: string; // Base64
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+}

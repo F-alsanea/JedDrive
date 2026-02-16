@@ -19,12 +19,13 @@ import {
   AlertTriangle,
   Settings,
   X,
-  Star
+  Star,
+  FileText
 } from 'lucide-react';
 import { Coupon, Provider, ProviderService } from '../types';
 
 const AdminDashboard: React.FC = () => {
-  const { language, providers, coupons, toggleCoupon, addCoupon, updateProvider, addProvider, user: currentUser, orders, updateExistingServicePrice } = useStore();
+  const { language, providers, coupons, toggleCoupon, addCoupon, updateProvider, addProvider, user: currentUser, orders, updateExistingServicePrice, providerRequests, submitProviderRequest } = useStore();
   const t = translations[language];
   const [activeTab, setActiveTab] = useState<'stats' | 'providers' | 'marketing' | 'approvals' | 'coupons' | 'debts' | 'orders'>('stats');
 
@@ -37,7 +38,9 @@ const AdminDashboard: React.FC = () => {
     city: 'Jeddah',
     google_maps_url: '',
     image_url: 'https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?auto=format&fit=crop&q=80&w=300',
-    services_list: [{ id: '1', name: 'خدمة أساسية', price: 150 }]
+    services_list: [{ id: '1', name: 'خدمة أساسية', price: 150 }],
+    driver_name: '',
+    driver_phone: ''
   });
 
   const [newCoupon, setNewCoupon] = useState({ code: '', val: 0, type: 'percent' as 'percent' | 'fixed' });
@@ -234,6 +237,28 @@ const AdminDashboard: React.FC = () => {
                     onChange={(e) => setTempProv({ ...tempProv, google_maps_url: e.target.value })}
                   />
                 </div>
+                {tempProv.service_type === 'Tow' && (
+                  <>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold opacity-50 text-blue-600 font-black">{language === 'ar' ? 'اسم السائق' : 'Driver Name'}</label>
+                      <input
+                        placeholder={language === 'ar' ? 'محمد علي' : 'Driver Name'}
+                        className="w-full p-4 rounded-2xl border-2 border-blue-100 dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"
+                        value={tempProv.driver_name}
+                        onChange={(e) => setTempProv({ ...tempProv, driver_name: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold opacity-50 text-blue-600 font-black">{language === 'ar' ? 'رقم جوال السائق' : 'Driver Phone'}</label>
+                      <input
+                        placeholder="05..."
+                        className="w-full p-4 rounded-2xl border-2 border-blue-100 dark:bg-slate-900 outline-none focus:ring-2 ring-blue-500"
+                        value={tempProv.driver_phone}
+                        onChange={(e) => setTempProv({ ...tempProv, driver_phone: e.target.value })}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Service Pricing Manager */}
@@ -562,6 +587,112 @@ const AdminDashboard: React.FC = () => {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        )
+      }
+
+      {/* Join Requests (Approvals) Tab */}
+      {
+        activeTab === 'approvals' && (
+          <div className="space-y-6">
+            <div className="bg-white dark:bg-slate-800 rounded-[40px] shadow-xl border overflow-hidden">
+              <div className="p-8 border-b dark:border-slate-700 flex justify-between items-center">
+                <div>
+                  <h3 className="text-2xl font-black text-blue-600 flex items-center gap-3">
+                    <FileText /> {language === 'ar' ? 'طلبات الانضمام الجديدة' : 'New Join Requests'}
+                  </h3>
+                  <p className="text-xs opacity-50 font-bold mt-1 uppercase tracking-widest">Review and activate new service providers</p>
+                </div>
+                <div className="bg-blue-600 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase shadow-lg">
+                  {providerRequests.length} {language === 'ar' ? 'طلب معلق' : 'Pending'}
+                </div>
+              </div>
+
+              {providerRequests.length === 0 ? (
+                <div className="py-20 text-center space-y-4">
+                  <div className="w-20 h-20 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mx-auto opacity-20">
+                    <CheckCircle2 size={40} />
+                  </div>
+                  <p className="font-black text-slate-400 uppercase tracking-widest text-sm">
+                    {language === 'ar' ? 'لا توجد طلبات جديدة حالياً' : 'All caught up! No pending requests.'}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-8">
+                  {providerRequests.map(req => (
+                    <div key={req.id} className="bg-slate-50 dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 space-y-4 group">
+                      <div className="flex justify-between items-start">
+                        <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-2xl border flex items-center justify-center overflow-hidden shadow-sm">
+                          {req.photo ? (
+                            <img src={req.photo} className="w-full h-full object-cover" />
+                          ) : (
+                            <ImageIcon className="opacity-20" />
+                          )}
+                        </div>
+                        <span className="text-[8px] font-black opacity-30 uppercase tracking-tighter">{new Date(req.created_at).toLocaleDateString()}</span>
+                      </div>
+
+                      <div>
+                        <h4 className="font-black text-xl leading-tight mb-1">{req.business_name}</h4>
+                        <div className="flex gap-2 items-center text-[10px] font-bold opacity-60">
+                          <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-md uppercase">{req.service_type}</span>
+                          <span>•</span>
+                          <span>{req.cr_number}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-xs font-black p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
+                        <Users size={14} className="opacity-40" />
+                        <span>{req.contact_number}</span>
+                      </div>
+
+                      <div className="pt-4 flex gap-2">
+                        <button
+                          onClick={() => {
+                            // Approve Logic: Convert Request to Provider
+                            const newProv: Provider = {
+                              id: `prov_${Date.now()}`,
+                              user_id: `user_${Date.now()}`,
+                              business_name: req.business_name,
+                              service_type: req.service_type as any,
+                              city: 'Jeddah',
+                              status: 'active',
+                              is_online: true,
+                              rating: 4.8,
+                              debt_balance: 0,
+                              credit_limit: 500,
+                              cr_number: req.cr_number,
+                              image_url: req.photo || 'https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?auto=format&fit=crop&q=80&w=300',
+                              services_list: [{ id: '1', name: 'خدمة أساسية', price: 150 }]
+                            };
+                            addProvider(newProv);
+                            // Remove from requests
+                            useStore.setState((state) => ({
+                              providerRequests: state.providerRequests.filter(r => r.id !== req.id)
+                            }));
+                            triggerSaveFeedback();
+                          }}
+                          className="flex-1 bg-green-600 text-white py-3 rounded-2xl font-black text-[10px] uppercase shadow-lg shadow-green-500/20 hover:scale-[1.02] transition-all"
+                        >
+                          {language === 'ar' ? 'قبول وتفعيل' : 'Approve & Activate'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            useStore.setState((state) => ({
+                              providerRequests: state.providerRequests.filter(r => r.id !== req.id)
+                            }));
+                            triggerSaveFeedback();
+                          }}
+                          className="px-4 bg-red-50 text-red-600 rounded-2xl font-black text-[10px] uppercase hover:bg-red-100 transition-colors"
+                        >
+                          {language === 'ar' ? 'رفض' : 'Reject'}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )

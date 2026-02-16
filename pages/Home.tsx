@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { translations } from '../translations';
@@ -15,7 +15,7 @@ interface ProviderCardProps {
   t: any;
 }
 
-const ProviderCard: React.FC<ProviderCardProps> = ({ p, selectedServices, toggleService, handleBookNow, language, t }) => {
+const ProviderCard = React.memo<ProviderCardProps>(({ p, selectedServices, toggleService, handleBookNow, language, t }) => {
   return (
     <div className={`group relative overflow-hidden glass-card p-8 hover:scale-[1.03] active:scale-95 transition-all duration-500 border border-white/5 hover:border-[#FF4500]/30 shadow-2xl ${p.is_featured ? 'ring-2 ring-[#FF4500]/20' : ''}`}>
       {p.is_featured && (
@@ -29,6 +29,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ p, selectedServices, toggle
         <div className="relative w-24 h-24 flex-shrink-0">
           <img
             src={p.image_url}
+            loading="lazy"
             className="w-full h-full object-cover rounded-[2rem] shadow-2xl transition-transform group-hover:scale-110"
             alt={p.business_name}
           />
@@ -97,7 +98,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ p, selectedServices, toggle
       </div>
     </div>
   );
-};
+});
 
 const Home: React.FC = () => {
   const { user, providers, language, theme, bannerUrl, updateUser } = useStore();
@@ -131,7 +132,7 @@ const Home: React.FC = () => {
     return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
   }, []);
 
-  const handleBookNow = (p: Provider) => {
+  const handleBookNow = useCallback((p: Provider) => {
     if (!user) {
       navigate('/login');
       return;
@@ -140,9 +141,9 @@ const Home: React.FC = () => {
     localStorage.setItem('selected_provider', JSON.stringify(p));
     localStorage.setItem('selected_services', JSON.stringify(services));
     navigate('/payment');
-  };
+  }, [user, navigate, selectedServices]);
 
-  const toggleService = (providerId: string, serviceId: string) => {
+  const toggleService = useCallback((providerId: string, serviceId: string) => {
     setSelectedServices(prev => {
       const current = prev[providerId] || [];
       if (current.includes(serviceId)) {
@@ -150,11 +151,22 @@ const Home: React.FC = () => {
       }
       return { ...prev, [providerId]: [...current, serviceId] };
     });
-  };
+  }, []);
 
-  const activeProviders = providers.filter(p => p.status === 'active' && (!selectedCategory || p.service_type === selectedCategory));
-  const featuredProviders = activeProviders.filter(p => p.is_featured);
-  const standardProviders = activeProviders.filter(p => !p.is_featured);
+  const activeProviders = useMemo(() =>
+    providers.filter(p => p.status === 'active' && (!selectedCategory || p.service_type === selectedCategory)),
+    [providers, selectedCategory]
+  );
+
+  const featuredProviders = useMemo(() =>
+    activeProviders.filter(p => p.is_featured),
+    [activeProviders]
+  );
+
+  const standardProviders = useMemo(() =>
+    activeProviders.filter(p => !p.is_featured),
+    [activeProviders]
+  );
 
   return (
     <div className="relative min-h-screen space-y-12 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-1000">

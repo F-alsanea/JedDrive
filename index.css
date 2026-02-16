@@ -38,6 +38,7 @@
 .animate-marquee {
   display: inline-block;
   animation: marquee 30s linear infinite;
+  will-change: transform;
 }
 
 [dir="rtl"] .animate-marquee {
@@ -107,6 +108,7 @@
   pointer-events: none;
   z-index: 0;
   animation: float 10s infinite alternate ease-in-out;
+  will-change: transform;
 }
 
 @keyframes float {

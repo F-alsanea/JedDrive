@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { translations } from '../translations';
-import { CreditCard, Wallet, Apple, Ticket, ArrowRight, ShieldCheck, CheckCircle2, Navigation, MapPin, Printer } from 'lucide-react';
+import { CreditCard, Wallet, Apple, Ticket, ArrowRight, ShieldCheck, CheckCircle2, Navigation, MapPin, Printer, Truck } from 'lucide-react';
 import { Provider, Order, ProviderService } from '../types';
 import { generateUniqueOTP } from '../constants';
 
@@ -119,32 +119,63 @@ const PaymentPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 text-xs font-bold opacity-60">
-              <div className="flex items-center gap-2"><MapPin size={14} /> حي الروضة</div>
+            <div className="grid grid-cols-2 gap-4 text-xs font-bold opacity-60 mb-6">
+              <div className="flex items-center gap-2"><MapPin size={14} /> {language === 'ar' ? 'فالطريق إليك' : 'On the Way'}</div>
               <div className="flex items-center gap-2 justify-end">{trackingPos === 100 ? '0' : Math.ceil((100 - trackingPos) / 10)} min</div>
+            </div>
+
+            {/* Driver Contact Info for Tow */}
+            <div className="bg-white/10 p-5 rounded-3xl border border-white/10 space-y-3">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
+                  <Truck className="text-white" size={24} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black opacity-50 uppercase tracking-widest">{language === 'ar' ? 'اسم السائق' : 'DRIVER NAME'}</p>
+                  <p className="font-bold">{selectedProvider?.driver_name || (language === 'ar' ? 'سائق معتمد' : 'Verified Driver')}</p>
+                </div>
+              </div>
+              <div className="pt-2">
+                <p className="text-xl font-black mb-1">{selectedProvider?.driver_phone}</p>
+                <a
+                  href={`https://wa.me/${selectedProvider?.driver_phone?.replace(/\s+/g, '') || '966596995687'}?text=${encodeURIComponent(
+                    language === 'ar'
+                      ? `مرحباً، أنا ${user?.name}. طلبي رقم ${orderId} لخدمة السطحة.`
+                      : `Hello, I am ${user?.name}. My order is #${orderId} for towing service.`
+                  )}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 text-[#25D366] font-bold text-xs"
+                >
+                  <div className="w-1.5 h-1.5 bg-[#25D366] rounded-full animate-ping"></div>
+                  {language === 'ar' ? 'تواصل معي واتساب' : 'Contact me via WhatsApp'}
+                </a>
+              </div>
             </div>
           </div>
         )}
 
         {/* Dynamic Navigation for stationary centers */}
-        <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-8 rounded-[40px] w-full flex flex-col items-center gap-6 shadow-2xl relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-3xl rounded-full -mr-10 -mt-10"></div>
-          <div className="bg-white/20 p-4 rounded-3xl backdrop-blur-md">
-            <MapPin size={40} className="animate-bounce" />
+        {selectedProvider?.service_type !== 'Tow' && (
+          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-8 rounded-[40px] w-full flex flex-col items-center gap-6 shadow-2xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-3xl rounded-full -mr-10 -mt-10"></div>
+            <div className="bg-white/20 p-4 rounded-3xl backdrop-blur-md">
+              <MapPin size={40} className="animate-bounce" />
+            </div>
+            <div className="text-center">
+              <h3 className="font-orbitron font-black text-2xl mb-2">{language === 'ar' ? 'يرجى التوجه للمركز' : 'STATIONARY CENTER'}</h3>
+              <p className="text-sm font-bold opacity-80 uppercase tracking-widest">{selectedProvider?.business_name}</p>
+            </div>
+            <a
+              href={selectedProvider?.google_maps_url || `https://www.google.com/maps/dir/?api=1&destination=${selectedProvider?.lat},${selectedProvider?.lng}`}
+              target="_blank"
+              rel="noreferrer"
+              className="w-full bg-white text-blue-600 py-5 rounded-[2rem] font-orbitron font-black text-sm flex items-center justify-center gap-3 hover:scale-[1.02] transition-all shadow-xl"
+            >
+              <Navigation size={20} /> {t.goToCenter}
+            </a>
           </div>
-          <div className="text-center">
-            <h3 className="font-orbitron font-black text-2xl mb-2">{language === 'ar' ? 'يرجى التوجه للمركز' : 'STATIONARY CENTER'}</h3>
-            <p className="text-sm font-bold opacity-80 uppercase tracking-widest">{selectedProvider?.business_name}</p>
-          </div>
-          <a
-            href={selectedProvider?.google_maps_url || `https://www.google.com/maps/dir/?api=1&destination=${selectedProvider?.lat},${selectedProvider?.lng}`}
-            target="_blank"
-            rel="noreferrer"
-            className="w-full bg-white text-blue-600 py-5 rounded-[2rem] font-orbitron font-black text-sm flex items-center justify-center gap-3 hover:scale-[1.02] transition-all shadow-xl"
-          >
-            <Navigation size={20} /> {t.goToCenter}
-          </a>
-        </div>
+        )}
 
         {/* Unique OTP Display */}
         <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl w-full border-4 border-dashed border-blue-200 dark:border-blue-900 text-center shadow-lg">
