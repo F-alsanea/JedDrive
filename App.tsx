@@ -4,7 +4,7 @@ import { MemoryRouter, Routes, Route, useNavigate, useLocation, Navigate } from 
 import { Bell, Clock, Package, CheckCircle, MapPin, Star, Shield } from 'lucide-react';
 import { useStore } from './store';
 import { translations } from './translations';
-import Landing from './pages/Landing';
+import Landing from './pages/LandingPage';
 import Home from './pages/Home';
 import AdminDashboard from './pages/AdminDashboard';
 import ProviderDashboard from './pages/ProviderDashboard';
