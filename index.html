@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ar">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JedDrive | خدمات السيارات بجدة</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3202/3202926.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;500;600;700;800;900&family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --accent: #3b82f6;
+        }
+
+        .dark {
+            --primary: #3b82f6;
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f1f5f9;
+            --accent: #60a5fa;
+        }
+
+        .theme-luxury {
+            --primary: #FF4500;
+            /* Fire Red-Orange */
+            --bg-main: #050505;
+            /* Deep Black */
+            --bg-card: rgba(255, 255, 255, 0.03);
+            /* Glass Card */
+            --text-main: #ffffff;
+            --accent: #FF6347;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        .theme-luxury .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .theme-luxury .font-inter {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .theme-luxury .font-cairo {
+            font-family: 'Cairo', sans-serif;
+        }
+
+        /* Override Tailwind Primary Colors for Themes */
+        .theme-luxury .text-blue-600 {
+            color: var(--primary) !important;
+        }
+
+        .theme-luxury .bg-blue-600 {
+            background-color: var(--primary) !important;
+        }
+
+        .theme-luxury .border-blue-600 {
+            border-color: var(--primary) !important;
+        }
+
+        .theme-luxury .bg-blue-50 {
+            background-color: rgba(255, 69, 0, 0.1) !important;
+        }
+
+        .theme-luxury .text-blue-100 {
+            color: #ffe0cc !important;
+        }
+
+        .theme-luxury .border-blue-500 {
+            border-color: var(--primary) !important;
+        }
+
+        .theme-luxury .ring-blue-500 {
+            --tw-ring-color: var(--primary) !important;
+        }
+
+        .theme-luxury .shadow-blue-500\/30 {
+            --tw-shadow-color: rgba(255, 69, 0, 0.3) !important;
+        }
+
+        .transition-theme {
+            transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+        }
+
+        .bg-card {
+            background-color: var(--bg-card);
+        }
+
+        /* Modern Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-main);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
+    </style>
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@19.2.4",
+    "react/": "https://esm.sh/react@19.2.4/",
+    "react-dom": "https://esm.sh/react-dom@19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@19.2.4/",
+    "react-router-dom": "https://esm.sh/react-router-dom@7.2.0",
+    "lucide-react": "https://esm.sh/lucide-react@0.460.0",
+    "zustand": "https://esm.sh/zustand@5.0.1"
+  }
+}
+</script>
+    <link rel="stylesheet" href="/index.css">
+</head>
+
+<body class="transition-theme">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+
+</html>

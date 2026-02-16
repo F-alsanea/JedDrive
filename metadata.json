@@ -1,0 +1,8 @@
+{
+  "name": "JedDrive - Car Services Jeddah",
+  "description": "A comprehensive car service platform for Jeddah featuring a user portal, admin dashboard for management, and a provider interface for service fulfillment.",
+  "requestFramePermissions": [
+    "geolocation",
+    "camera"
+  ]
+}
